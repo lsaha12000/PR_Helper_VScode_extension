@@ -1,0 +1,30 @@
+{
+  "name": "pr-helper",
+  "displayName": "PR Helper",
+  "description": "Wizard-driven PR creation with Azure DevOps + Copilot analysis",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:pr-helper.open"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pr-helper.open",
+        "title": "PR Helper: Open"
+      }
+    ]
+  },
+  "scripts": {
+    "build:webview": "cd ../webview-ui && npm run build",
+    "build:ext": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --platform=node --format=cjs",
+    "vscode:prepublish": "npm run build:webview && npm run build:ext",
+    "watch": "npm run build:ext -- --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}

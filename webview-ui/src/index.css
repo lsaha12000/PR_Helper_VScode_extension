@@ -1,0 +1,121 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground, #ccc);
+  background: var(--vscode-editor-background, #1e1e1e);
+  padding: 0;
+}
+
+.wizard {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.progress-bar .step-dot {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--vscode-editorWidget-border, #444);
+  transition: background 0.2s;
+}
+.progress-bar .step-dot.active { background: var(--vscode-button-background, #0e639c); }
+.progress-bar .step-dot.done { background: var(--vscode-terminal-ansiGreen, #4caf50); }
+
+/* Step card */
+.step-card {
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-editorWidget-border, #444);
+  border-radius: 6px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.step-card h2 { font-size: 1.1rem; font-weight: 600; }
+.step-card p  { color: var(--vscode-descriptionForeground, #999); font-size: 0.85rem; }
+
+/* Form controls */
+label { font-size: 0.8rem; font-weight: 500; color: var(--vscode-descriptionForeground, #aaa); display: block; margin-bottom: 4px; }
+
+input[type="text"], input[type="password"], select {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #ccc);
+  border: 1px solid var(--vscode-input-border, #555);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  outline: none;
+}
+input:focus, select:focus {
+  border-color: var(--vscode-focusBorder, #007fd4);
+}
+
+/* Buttons */
+.btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+
+button {
+  padding: 6px 16px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+button:disabled { opacity: 0.45; cursor: default; }
+
+.btn-primary {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #fff);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground, #1177bb);
+}
+.btn-secondary {
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  color: var(--vscode-button-secondaryForeground, #ccc);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
+/* Error / info messages */
+.msg-error { color: var(--vscode-errorForeground, #f48771); font-size: 0.82rem; }
+.msg-info  { color: var(--vscode-descriptionForeground, #999); font-size: 0.82rem; }
+
+/* Commit list */
+.commit-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.commit-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.82rem; }
+.commit-item code { font-family: monospace; color: var(--vscode-textPreformat-foreground, #9cdcfe); }
+
+/* Story list */
+.story-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.story-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 4px; background: var(--vscode-editor-background, #1e1e1e); }
+.story-badge { font-size: 0.7rem; padding: 1px 6px; border-radius: 10px; background: var(--vscode-badge-background, #4d4d4d); color: var(--vscode-badge-foreground, #fff); white-space: nowrap; }
+
+/* Analysis result */
+.analysis-item { padding: 10px; border-radius: 4px; border-left: 3px solid transparent; background: var(--vscode-editor-background, #1e1e1e); }
+.analysis-item.PASS    { border-color: var(--vscode-terminal-ansiGreen, #4caf50); }
+.analysis-item.PARTIAL { border-color: var(--vscode-terminal-ansiYellow, #e5c07b); }
+.analysis-item.FAIL    { border-color: var(--vscode-errorForeground, #f48771); }
+.analysis-status { font-weight: 700; font-size: 0.78rem; }
+.analysis-status.PASS    { color: var(--vscode-terminal-ansiGreen, #4caf50); }
+.analysis-status.PARTIAL { color: var(--vscode-terminal-ansiYellow, #e5c07b); }
+.analysis-status.FAIL    { color: var(--vscode-errorForeground, #f48771); }
+
+/* Spinner */
+.spinner { width: 20px; height: 20px; border: 2px solid var(--vscode-editorWidget-border, #444); border-top-color: var(--vscode-button-background, #0e639c); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
