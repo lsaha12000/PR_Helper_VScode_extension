@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import git, ado, pr
+from routers import git, ado, pr, analyze
 
 app = FastAPI(title="PR Helper Backend")
 
@@ -17,6 +17,7 @@ app.add_middleware(
 app.include_router(git.router, prefix="/git")
 app.include_router(ado.router, prefix="/ado")
 app.include_router(pr.router, prefix="/pr")
+app.include_router(analyze.router)
 
 
 @app.get("/health")

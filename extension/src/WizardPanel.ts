@@ -119,7 +119,10 @@ export class WizardPanel {
           providerConfig: ProviderConfig;
         };
         try {
-          const analyzer = createAnalyzer(providerConfig);
+          const config: ProviderConfig = providerConfig.provider === "openai"
+            ? { ...providerConfig, backendPort: this.backend.port! }
+            : providerConfig;
+          const analyzer = createAnalyzer(config);
           const result = await analyzer.analyze(diff, stories as Parameters<typeof analyzer.analyze>[1]);
           this.post("analyze-result", { success: true, result });
         } catch (e) {

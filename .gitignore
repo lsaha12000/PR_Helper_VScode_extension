@@ -53,6 +53,7 @@ desktop.ini
 .vscode/*
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/tasks.json
 .idea/
 *.swp
 *.swo
