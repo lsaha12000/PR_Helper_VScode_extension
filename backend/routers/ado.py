@@ -36,6 +36,19 @@ def sprints(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/members")
+def members(
+    org_url: str = Query(...),
+    pat: str = Query(...),
+    project: str = Query(...),
+    query: str = Query(""),
+):
+    try:
+        return {"members": ado_service.search_members(org_url, pat, project, query)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/work-items")
 def work_items(
     org_url: str = Query(...),

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { rpc } from "../api/vscode";
 import type { WizardState, AnalysisItem } from "../App";
 
-interface Props { state: WizardState; patch: (p: Partial<WizardState>) => void; next: () => void; back: () => void; }
+interface Props { state: WizardState; patch: (p: Partial<WizardState>) => void; next: () => void; back: () => void; cancel: () => void; }
 
 function providerLabel(state: WizardState): string {
   if (state.aiProvider === "openai") return `OpenAI (${state.aiModel || "gpt-4o"})`;
@@ -16,7 +16,7 @@ function buildProviderConfig(state: WizardState) {
   return { provider: "copilot" };
 }
 
-export default function Step7Analysis({ state, patch, next, back }: Props) {
+export default function Step7Analysis({ state, patch, next, back, cancel }: Props) {
   const [phase, setPhase] = useState<"fetching-diff" | "analyzing" | "done" | "error">("fetching-diff");
   const [results, setResults] = useState<AnalysisItem[]>(state.analysisResult);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +100,9 @@ export default function Step7Analysis({ state, patch, next, back }: Props) {
 
       {phase === "done" && (
         <div className="btn-row">
+          <button className="btn-secondary" onClick={cancel} style={{ color: "var(--vscode-errorForeground, #f48771)" }}>
+            Cancel
+          </button>
           <button className="btn-secondary" onClick={back}>Back</button>
           <button className="btn-secondary" onClick={() => { setResults([]); patch({ analysisResult: [] }); run(); }}>
             Re-analyze

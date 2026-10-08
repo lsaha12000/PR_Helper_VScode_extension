@@ -10,6 +10,12 @@ import Step8RaisePR from "./steps/Step8RaisePR";
 
 export type AIProvider = "copilot" | "openai";
 
+export interface ReviewerItem {
+  id: string;
+  displayName: string;
+  uniqueName: string;
+}
+
 export interface WizardState {
   repoPath: string;
   fromBranch: string;
@@ -27,6 +33,11 @@ export interface WizardState {
   selectedStories: StoryItem[];
   diff: string;
   analysisResult: AnalysisItem[];
+  // PR fields
+  prReviewers: ReviewerItem[];
+  prLabels: string[];
+  prIsDraft: boolean;
+  prComment: string;
 }
 
 export interface StoryItem {
@@ -48,7 +59,7 @@ const STEP_LABELS = ["Repo", "Branches", "Commits", "AI Provider", "ADO Config",
 
 export default function App() {
   const [step, setStep] = useState(0);
-  const [state, setState] = useState<WizardState>({
+  const INITIAL_STATE: WizardState = {
     repoPath: "",
     fromBranch: "",
     toBranch: "",
@@ -65,11 +76,18 @@ export default function App() {
     selectedStories: [],
     diff: "",
     analysisResult: [],
-  });
+    prReviewers: [],
+    prLabels: [],
+    prIsDraft: false,
+    prComment: "",
+  };
+
+  const [state, setState] = useState<WizardState>(INITIAL_STATE);
 
   const next = () => setStep((s) => Math.min(s + 1, STEP_LABELS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
   const patch = (partial: Partial<WizardState>) => setState((s) => ({ ...s, ...partial }));
+  const cancel = () => { setState(INITIAL_STATE); setStep(0); };
 
   return (
     <div className="wizard">
@@ -91,8 +109,8 @@ export default function App() {
       {step === 3 && <Step4AIProvider state={state} patch={patch} next={next} back={back} />}
       {step === 4 && <Step5AdoConfig state={state} patch={patch} next={next} back={back} />}
       {step === 5 && <Step6UserStories state={state} patch={patch} next={next} back={back} />}
-      {step === 6 && <Step7Analysis state={state} patch={patch} next={next} back={back} />}
-      {step === 7 && <Step8RaisePR state={state} patch={patch} back={back} />}
+      {step === 6 && <Step7Analysis state={state} patch={patch} next={next} back={back} cancel={cancel} />}
+      {step === 7 && <Step8RaisePR state={state} patch={patch} back={back} cancel={cancel} />}
     </div>
   );
 }

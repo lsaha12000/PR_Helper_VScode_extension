@@ -8,7 +8,11 @@ export class BackendManager {
   port: number | null = null;
 
   async start(extensionPath: string, systemPython: string): Promise<void> {
-    const projectRoot = path.join(extensionPath, "..");
+    // Dev mode: backend lives one level up (PR_Helper/backend/).
+    // Installed mode: backend is bundled inside the extension directory.
+    const devBackend = path.join(extensionPath, "..", "backend", "main.py");
+    const isDev = fs.existsSync(devBackend);
+    const projectRoot = isDev ? path.join(extensionPath, "..") : extensionPath;
     const backendDir = path.join(projectRoot, "backend");
     const mainPy = path.join(backendDir, "main.py");
 
@@ -100,7 +104,7 @@ export class BackendManager {
         const pipExe = process.platform === "win32"
           ? path.join(venvDir, "Scripts", "pip.exe")
           : path.join(venvDir, "bin", "pip");
-        await runCommand(pipExe, ["install", "--quiet", "--upgrade", "pip"], {
+        await runCommand(venvPython, ["-m", "pip", "install", "--quiet", "--upgrade", "pip"], {
           onError: (err) => `pip upgrade failed: ${err}`,
         });
 

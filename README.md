@@ -16,7 +16,7 @@ A VS Code extension that guides developers through a structured 8-step wizard to
 8. [AI providers](#ai-providers)
 9. [Azure DevOps PAT permissions](#azure-devops-pat-permissions)
 10. [Security](#security)
-11. [Building for packaging](#building-for-packaging)
+11. [Installing for everyday use](#installing-for-everyday-use-no-pr_helper-folder-needed)
 12. [Testing with the sample repository](#testing-with-the-sample-repository)
 13. [Troubleshooting](#troubleshooting)
 14. [Project status](#project-status)
@@ -166,7 +166,7 @@ If all checks pass, it:
 ```powershell
 # 1. Create Python venv and install backend dependencies
 python -m venv .venv
-.venv\Scripts\pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install --upgrade pip   # must use python.exe -m pip on Windows
 .venv\Scripts\pip install -r backend\requirements.txt
 
 # 2. Extension TypeScript dependencies
@@ -186,60 +186,107 @@ cd ..
 
 > **Open the `PR_Helper/` root folder in VS Code** — not `extension/` or any subfolder. The `.vscode/launch.json` at the root is configured for this layout.
 
-1. `File → Open Folder` → select `PR_Helper/`
-2. Press **F5**
+### Step 1 — Build the webview once (first time only)
 
-VS Code automatically:
-- Runs the pre-launch build task (`npm run vscode:prepublish` inside `extension/`) — compiles the webview (Vite) and the extension (esbuild) into `extension/dist/`
-- Opens a second VS Code window — the **Extension Development Host**
-
-3. In the new window: `Ctrl+Shift+P` → **PR Helper: Open**
-
-The first F5 takes ~30 seconds (build from scratch). Subsequent launches are faster.
-
-### Watch mode (for active development)
+The webview (React UI) is **not** rebuilt on every F5 — only when you change files in `webview-ui/`. Build it manually the first time:
 
 ```powershell
-# In extension/
+cd extension
+npm run build:webview
+```
+
+This produces `extension/dist/webview/index.html`. You only need to re-run this when you edit something inside `webview-ui/src/`.
+
+### Step 2 — Press F5
+
+```
+File → Open Folder → PR_Helper/   (if not already open)
+F5
+```
+
+VS Code automatically:
+- Runs the pre-launch build task — `npm run build:ext` (esbuild only, ~100 ms) — compiles `extension/src/` into `extension/dist/extension.js`
+- Opens a second VS Code window — the **Extension Development Host**
+
+### Step 3 — Use the extension in the new window
+
+In the **Extension Development Host** window you will immediately see a status bar item at the bottom:
+
+```
+$(loading~spin) PR Helper: Starting…
+```
+
+This confirms the extension loaded successfully. Once the Python backend is ready (a few seconds, or up to ~60 s on first run while the `.venv` is created):
+
+```
+$(check) PR Helper: Ready
+```
+
+**Click the status bar item** — or `Ctrl+Shift+P` → **PR Helper: Open** — to open the wizard as a tab in that window.
+
+If the backend fails to start, the status bar turns red and an error notification appears with a **Reload Window** button.
+
+### npm build commands reference
+
+All commands run from inside the `extension/` folder:
+
+| Command | What it does | When to run |
+|---|---|---|
+| `npm run build:ext` | esbuild — compiles `src/extension.ts` → `dist/extension.js` (~100 ms) | Automatically on every F5 |
+| `npm run build:webview` | Vite — compiles `webview-ui/src/` → `dist/webview/` (~10 s) | Once on first setup; again when `webview-ui/` changes |
+| `npm run vscode:prepublish` | Both of the above in sequence | Before packaging a `.vsix` |
+| `npm run watch` | esbuild in watch mode — rebuilds `extension.js` on every save | During active extension development |
+
+### Watch mode (for active extension development)
+
+If you are iterating on TypeScript in `extension/src/`, run watch mode instead of relying on the F5 build:
+
+```powershell
+cd extension
 npm run watch
 ```
 
-Then press F5. The extension host picks up incremental builds on each save.
+Then press F5. esbuild watches for changes and rebuilds in milliseconds on each save. Reload the Extension Development Host window (`Ctrl+Shift+P` → **Reload Window**) to pick up changes.
 
 ---
 
 ## What happens on first launch
 
-When the Extension Development Host window opens for the first time, the extension runs these checks automatically before registering any commands:
+The moment the Extension Development Host window opens, the extension activates automatically (no command needed). Here is the full sequence:
 
 ```
-Extension activates
+Extension Development Host opens
 │
-├─ 1. Python check
+├─ Status bar shows: $(loading~spin) PR Helper: Starting…
+│
+├─ 1. Python check (up to 5 s timeout per candidate)
 │    Tries "python --version", then "python3 --version"
-│    ├─ Not found → VS Code error notification + "Download Python" button (opens python.org) → activation stops
-│    └─ Found but < 3.9 → error with exact version shown + download link → activation stops
+│    ├─ Not found → error notification + "Download Python" button → status bar: $(error) PR Helper: Python not found
+│    └─ Found but < 3.9 → error with exact version + download link → stops
 │
-├─ 2. Virtual environment bootstrap (if .venv is absent)
-│    VS Code progress notification: "PR Helper: Setting up Python environment…"
-│    ├─ Creates .venv with python -m venv
-│    ├─ Upgrades pip
-│    └─ Installs backend/requirements.txt into .venv
-│        └─ Any failure → clear error message with manual fix instructions
+├─ 2. Virtual environment bootstrap (only if .venv is absent)
+│    Progress notification: "PR Helper: Setting up Python environment…"
+│    ├─ python -m venv .venv
+│    ├─ python.exe -m pip install --upgrade pip
+│    └─ pip install -r backend/requirements.txt
+│        └─ Any failure → clear error + manual fix instructions
 │
 ├─ 3. Backend startup
 │    Spawns .venv/Scripts/python.exe backend/main.py
 │    Waits up to 30 s for "READY:PORT=<n>" on stdout
-│    ├─ Timeout → "Backend startup timed out" + hint to check Output panel
-│    ├─ Crash (non-zero exit) → "Backend exited with code N" + hint to run manually
+│    ├─ Timeout → error notification + "Reload Window" button → status bar: $(error) PR Helper: Backend failed
+│    ├─ Non-zero exit → "Backend exited with code N" + run-manually hint
 │    └─ ENOENT → "Delete .venv and reload to recreate it"
 │
-└─ 4. Health check
-     Polls GET /health up to 30 times (9 s total)
-     └─ Failure → "Backend health check failed" + hint to check Developer Tools console
+├─ 4. Health check
+│    Polls GET /health every 300 ms, up to 30 attempts (9 s total)
+│    └─ All fail → "Backend health check failed" + Developer Tools hint
+│
+└─ Status bar shows: $(check) PR Helper: Ready
+   Click it (or Ctrl+Shift+P → PR Helper: Open) to open the wizard tab
 ```
 
-If anything in steps 1–4 fails, an actionable VS Code error notification appears with either a fix button ("Reload Window", "Download Python") or manual instructions.
+All errors surface as VS Code notifications with actionable buttons. The status bar is always visible so you know whether the backend is ready before clicking.
 
 ---
 
@@ -311,27 +358,70 @@ No credentials are stored between sessions. You will be prompted to re-enter the
 
 ---
 
-## Building for packaging
+## Installing for everyday use (no PR_Helper folder needed)
 
-Build the production bundle:
+> **Development mode (F5) requires the `PR_Helper/` folder to be open in VS Code.**
+> If you just want to *use* the extension in your normal projects without keeping PR_Helper open, package and install it as a `.vsix` — after that it works in any VS Code window like any other extension.
+
+### Step 1 — Install the packaging tool (one-time)
+
+```powershell
+npm install -g @vscode/vsce
+```
+
+### Step 2 — Build and package
 
 ```powershell
 cd extension
-npm run vscode:prepublish
+npm run vscode:prepublish   # compiles webview (Vite) + extension (esbuild) into dist/
+npx vsce package --allow-missing-repository --allow-star-activation
 ```
 
-This runs:
+> **Why the extra flags?**
+>
+> `vsce` raises two warnings that block packaging without confirmation:
+>
+> | Flag | Warning suppressed | Why it is safe here |
+> |---|---|---|
+> | `--allow-missing-repository` | No `repository` field in `package.json` | This is internal tooling — no public repo needed |
+> | `--allow-star-activation` | `"activationEvents": ["*"]` activates on every VS Code startup | Intentional — the extension needs to start the Python backend as early as possible so it is ready when you open the wizard |
+
+### Step 3 — Install the .vsix in VS Code
+
+1. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
+2. Browse to the `.vsix` file inside the `extension/` folder
+3. Reload VS Code when prompted
+
+After this, `Ctrl+Shift+P` → **PR Helper: Open** is available in **every VS Code window** on your machine. You never need to open `PR_Helper/` again.
+
+---
+
+### Developing while keeping another project open
+
+If you are actively working on the extension and need both windows at the same time:
+
+1. Keep your project open in the current VS Code window
+2. `File → New Window` to open a second VS Code instance
+3. In the new window: `File → Open Folder` → select `PR_Helper/`
+4. Press **F5** in that window — the Extension Development Host opens as a third window
+
+The three windows are fully independent.
+
+---
+
+## Building for packaging (reference)
+
+The two commands used internally by the steps above:
+
+```powershell
+# From extension/
+npm run vscode:prepublish   # build:webview + build:ext
+npx vsce package --allow-missing-repository --allow-star-activation
+```
+
+`vscode:prepublish` runs:
 1. `cd ../webview-ui && npm run build` — Vite builds the React app into `extension/dist/webview/`
 2. `esbuild src/extension.ts ...` — bundles the extension into `extension/dist/extension.js`
-
-Package as a `.vsix` installable file:
-
-```powershell
-cd extension
-npx vsce package
-```
-
-Install the resulting `.vsix` in any VS Code instance via `Extensions: Install from VSIX...`.
 
 ---
 

@@ -3,7 +3,7 @@ import type { IAnalyzer, WorkItemStory, StoryAnalysis } from "./IAnalyzer";
 
 export class CopilotAnalyzer implements IAnalyzer {
   async analyze(diff: string, stories: WorkItemStory[]): Promise<StoryAnalysis[]> {
-    const models = await vscode.lm.selectChatModels({ vendor: "copilot", family: "gpt-4o" });
+    const models = await vscode.lm.selectChatModels({ vendor: "copilot" });
     if (!models.length) {
       throw new Error("No GitHub Copilot model available. Please sign in to Copilot.");
     }

@@ -4,16 +4,30 @@
     {
       "label": "Build Extension",
       "type": "shell",
-      "command": "npm run vscode:prepublish",
+      "command": "npm run build:ext",
       "options": {
         "cwd": "${workspaceFolder}/extension"
       },
       "group": "build",
       "presentation": {
-        "reveal": "silent",
+        "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": "$tsc"
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Webview (run once when UI changes)",
+      "type": "shell",
+      "command": "npm run build:webview",
+      "options": {
+        "cwd": "${workspaceFolder}/extension"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     },
     {
       "label": "Watch Extension",

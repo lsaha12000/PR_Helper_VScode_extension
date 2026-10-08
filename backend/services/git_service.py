@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional
+import re
 import git as gitlib
 
 
@@ -35,6 +36,53 @@ def get_commits(repo_path: str, from_branch: str, to_branch: str) -> list[dict]:
         }
         for c in commits
     ]
+
+
+def get_ado_remote_info(repo_path: str) -> dict:
+    """Parse org_url, project, and repo_name from the ADO remote URL."""
+    repo = gitlib.Repo(repo_path)
+    try:
+        remote_url = repo.remote("origin").url
+    except Exception:
+        return {"org_url": None, "project": None, "repo_name": None}
+
+    # HTTPS: https://dev.azure.com/{org}/{project}/_git/{repo}
+    # or:    https://{org}.visualstudio.com/{project}/_git/{repo}
+    m = re.match(
+        r"https://dev\.azure\.com/([^/]+)/([^/]+)/_git/([^/]+?)(?:\.git)?$",
+        remote_url,
+    )
+    if m:
+        org, project, repo_name = m.group(1), m.group(2), m.group(3)
+        return {
+            "org_url": f"https://dev.azure.com/{org}",
+            "project": project,
+            "repo_name": repo_name,
+        }
+
+    m = re.match(
+        r"https://([^.]+)\.visualstudio\.com/([^/]+)/_git/([^/]+?)(?:\.git)?$",
+        remote_url,
+    )
+    if m:
+        org, project, repo_name = m.group(1), m.group(2), m.group(3)
+        return {
+            "org_url": f"https://dev.azure.com/{org}",
+            "project": project,
+            "repo_name": repo_name,
+        }
+
+    # SSH: git@ssh.dev.azure.com:v3/{org}/{project}/{repo}
+    m = re.match(r"git@ssh\.dev\.azure\.com:v3/([^/]+)/([^/]+)/([^/]+?)(?:\.git)?$", remote_url)
+    if m:
+        org, project, repo_name = m.group(1), m.group(2), m.group(3)
+        return {
+            "org_url": f"https://dev.azure.com/{org}",
+            "project": project,
+            "repo_name": repo_name,
+        }
+
+    return {"org_url": None, "project": None, "repo_name": None}
 
 
 def get_diff(

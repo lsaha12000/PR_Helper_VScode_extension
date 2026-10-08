@@ -72,7 +72,7 @@ if (-not (Test-Path ".venv")) {
 
 # Upgrade pip inside the venv to avoid build warnings
 Write-Host "       Upgrading pip inside .venv..." -ForegroundColor DarkGray
-.venv\Scripts\pip install --quiet --upgrade pip
+.venv\Scripts\python.exe -m pip install --quiet --upgrade pip
 if ($LASTEXITCODE -ne 0) { Write-Warning "pip upgrade failed (non-fatal, continuing)" }
 
 # ── Step 1: Python backend dependencies ──────────────────────────────────────
@@ -118,7 +118,7 @@ Write-Host "`n=== Setup complete! ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "To run the extension in development:" -ForegroundColor Cyan
 Write-Host "  1. Open the PR_Helper root folder in VS Code"
-Write-Host "  2. Press F5  — VS Code builds and launches the Extension Development Host"
+Write-Host "  2. Press F5  -> VS Code builds and launches the Extension Development Host"
 Write-Host "  3. In the new window: Ctrl+Shift+P  ->  PR Helper: Open"
 Write-Host ""
 Write-Host "Note: Python dependencies are isolated in .venv and will not affect your global Python." -ForegroundColor DarkGray

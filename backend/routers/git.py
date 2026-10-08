@@ -36,6 +36,14 @@ def commits(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/remote-info")
+def remote_info(repo: str = Query(...)):
+    try:
+        return git_service.get_ado_remote_info(repo)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/diff")
 def diff(
     repo: str = Query(...),

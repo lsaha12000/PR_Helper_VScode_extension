@@ -19,25 +19,34 @@ export default function Step6UserStories({ state, patch, next, back }: Props) {
 
   useEffect(() => {
     setLoading(true);
-    rpc<{ projects: Project[] }>("get-projects", "get-projects-result", { org_url: state.adoOrgUrl, pat: state.adoPat })
-      .then((res) => { setProjects(res.projects); setLoading(false); })
+    rpc<{ projects?: Project[]; detail?: string }>("get-projects", "get-projects-result", { org_url: state.adoOrgUrl, pat: state.adoPat })
+      .then((res) => {
+        if (res.detail) { setError(res.detail); } else { setProjects(res.projects ?? []); }
+        setLoading(false);
+      })
       .catch((e) => { setError(String(e)); setLoading(false); });
   }, []);
 
   useEffect(() => {
     if (!project) return;
     setLoading(true);
-    rpc<{ sprints: Sprint[] }>("get-sprints", "get-sprints-result", { org_url: state.adoOrgUrl, pat: state.adoPat, project })
-      .then((res) => { setSprints(res.sprints); setLoading(false); })
+    rpc<{ sprints?: Sprint[]; detail?: string }>("get-sprints", "get-sprints-result", { org_url: state.adoOrgUrl, pat: state.adoPat, project })
+      .then((res) => {
+        if (res.detail) { setError(res.detail); } else { setSprints(res.sprints ?? []); }
+        setLoading(false);
+      })
       .catch((e) => { setError(String(e)); setLoading(false); });
   }, [project]);
 
   useEffect(() => {
     if (!sprint) return;
     setLoading(true);
-    rpc<{ items: StoryItem[] }>("get-work-items", "get-work-items-result", {
+    rpc<{ items?: StoryItem[]; detail?: string }>("get-work-items", "get-work-items-result", {
       org_url: state.adoOrgUrl, pat: state.adoPat, project, sprint_path: sprint.path,
-    }).then((res) => { setStories(res.items); setLoading(false); })
+    }).then((res) => {
+      if (res.detail) { setError(res.detail); } else { setStories(res.items ?? []); }
+      setLoading(false);
+    })
       .catch((e) => { setError(String(e)); setLoading(false); });
   }, [sprint]);
 
@@ -59,6 +68,7 @@ export default function Step6UserStories({ state, patch, next, back }: Props) {
     <div className="step-card">
       <h2>Step 6 — User Stories</h2>
       <p>Select the project, sprint, and the user stories this PR addresses.</p>
+      {state.adoProject && <p className="msg-info">Project and repository auto-detected from your git remote.</p>}
       {error && <span className="msg-error">{error}</span>}
       <div>
         <label>Project</label>
